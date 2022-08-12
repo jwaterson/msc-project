@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>org.example.project</id>
+    <name>Losing The Thread</name>
+    <vendor email="losingthethread@gmail.com" url="http://www.nonexistent.com">Losing The Thread</vendor>
+
+    <description>A plugin to track approximate execution of multithreaded programs in Java</description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
