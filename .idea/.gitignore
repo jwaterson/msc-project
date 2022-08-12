@@ -15,8 +15,8 @@
 *.iml
 *.iws
 /gradle
-gradlew
-gradlew.bat
-settings.gradle
+/gradlew
+/gradlew.bat
+/settings.gradle
 
 
