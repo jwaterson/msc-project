@@ -19,6 +19,8 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class Agent {
 
+    static final long START_TIME = System.nanoTime();
+
     public static void premain(String args, Instrumentation instrumentation) {
         instrumentation.addTransformer((new ClassFileTransformer() {
             /**
@@ -57,8 +59,6 @@ public class Agent {
                 ClassNode cn = new ClassNode(ASM9);
                 ClassReader cr1 = new ClassReader(classfileBuffer);
                 cr1.accept(cn, 0);
-
-                final long START_TIME = System.nanoTime();
 
                 for (MethodNode mn : cn.methods) {
                     InsnList insns = mn.instructions;
