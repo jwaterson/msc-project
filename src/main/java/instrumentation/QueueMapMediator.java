@@ -77,7 +77,10 @@ public class QueueMapMediator {
         return Long.compare(time1, time2);
     }
 
-
-
+    public static void printOutput() {
+        for (String[] arr : output()) {
+            System.out.println(Arrays.toString(arr));
+        }
+    }
 
 }
