@@ -1,15 +1,13 @@
+package instrumentation;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-
-import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -51,23 +49,18 @@ public class Agent {
                 if (loader == null) { // bootstrap loader caught by this check - will not load user's code
                     return null;
                 }
+
+                if (className.startsWith("instrumentation/")) { // files that should not be instrumented
+                    return classfileBuffer;
+                }
+
                 ClassNode cn = new ClassNode(ASM9);
                 ClassReader cr1 = new ClassReader(classfileBuffer);
                 cr1.accept(cn, 0);
 
-                String mapName = availableName(cn.fields);
-                cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
-                        mapName, "Ljava/util/concurrent/ConcurrentHashMap;",
-                        null, null));
-
-                boolean synchronizedBlockPresent = false;
-                long startTime = System.nanoTime();
+                final long START_TIME = System.nanoTime();
 
                 for (MethodNode mn : cn.methods) {
-                    if ("<clinit>".equals(mn.name)) {
-                        synchronizedBlockPresent = true;
-                    }
-
                     InsnList insns = mn.instructions;
 
                     if (insns.size() == 0) {
@@ -95,29 +88,26 @@ public class Agent {
 
                         if (lineNum > -1 && l1 < l2) {
                             InsnList addedInsns = new InsnList();
-
-                            addedInsns.add(new FieldInsnNode(GETSTATIC, className, mapName,
-                                    "Ljava/util/concurrent/ConcurrentHashMap;"));
-                            addedInsns.add(new LdcInsnNode(startTime));
-                            addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/System",
-                                    "nanoTime", "()J", false));
-                            addedInsns.add(new InsnNode(LSUB));
-                            addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Long",
-                                    "valueOf", "(J)Ljava/lang/Long;", false));
                             addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Thread",
                                     "currentThread", "()Ljava/lang/Thread;", false));
                             addedInsns.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Thread",
                                     "getId", "()J", false));
-                            addedInsns.add(new InvokeDynamicInsnNode("makeConcatWithConstants",
-                                    "(J)Ljava/lang/String;",
-                                    new Handle(H_INVOKESTATIC,
-                                            "java/lang/invoke/StringConcatFactory",
-                                            "makeConcatWithConstants",
-                                            "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",
-                                            false),
-                                    "\u0001|" + lineNum + "|" + className));
-                            addedInsns.add(new MethodInsnNode(INVOKEVIRTUAL, "java/util/concurrent/ConcurrentHashMap",
-                                    "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false));
+                            addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/String",
+                                    "valueOf", "(J)Ljava/lang/String;", false));
+                            addedInsns.add(new MethodInsnNode(INVOKESTATIC, "application/QueueMapMediator",
+                                    "getByThreadId", "(Ljava/lang/String;)Ljava/util/Queue;", false));
+                            addedInsns.add(new TypeInsnNode(NEW, "application/ThreadMarker"));
+                            addedInsns.add(new InsnNode(DUP));
+                            addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/System",
+                                    "nanoTime", "()J", false));
+                            addedInsns.add(new LdcInsnNode(START_TIME));
+                            addedInsns.add(new InsnNode(LSUB));
+                            addedInsns.add(new IntInsnNode(BIPUSH, lineNum));
+                            addedInsns.add(new LdcInsnNode(className));
+                            addedInsns.add(new MethodInsnNode(INVOKESPECIAL, "application/ThreadMarker",
+                                    "<init>", "(JILjava/lang/String;)V"));
+                            addedInsns.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Queue",
+                                    "add", "(Ljava/lang/Object;)Z", true));
                             addedInsns.add(new InsnNode(POP));
 
                             numAdded = addedInsns.size();
@@ -131,65 +121,12 @@ public class Agent {
                     }
                 }
 
-                if (!synchronizedBlockPresent) {
-                    cn.methods.add(new MethodNode(ACC_STATIC, "<clinit>",
-                            "()V", null, null));
-                }
-
-                for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("<clinit>")) {
-                        // prepend map instantiation
-                        InsnList insns = new InsnList();
-                        insns.add(new LabelNode());
-                        insns.add(new TypeInsnNode(NEW,
-                                "java/util/concurrent/ConcurrentHashMap"));
-                        insns.add(new InsnNode(DUP));
-                        insns.add(new MethodInsnNode(INVOKESPECIAL,
-                                "java/util/concurrent/ConcurrentHashMap",
-                                "<init>",
-                                "()V",
-                                false));
-                        insns.add(new FieldInsnNode(PUTSTATIC,
-                                className,
-                                mapName,
-                                "Ljava/util/concurrent/ConcurrentHashMap;"));
-                        if (!synchronizedBlockPresent) {
-                            insns.add(new InsnNode(RETURN));
-                            mn.maxStack = 2;
-                        }
-                        mn.instructions.insert(insns); // prepends new insns
-                        break;
-                    }
-                }
-
                 ClassWriter cw1 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 cn.accept(cw1);
                 return cw1.toByteArray();
-            }
 
+            }
         }));
-
-    }
-
-    private static String availableName(List<FieldNode> fields) {
-        int[] nums = fields.stream()
-                .mapToInt(f -> f.name.length())
-                .sorted()
-                .toArray();
-
-        boolean encountered;
-        for (int i = 1; ; i++) {
-            encountered = false;
-            for (int n : nums) {
-                if (n == i) {
-                    encountered = true;
-                    break;
-                }
-            }
-            if (!encountered) {
-                return "$".repeat(i);
-            }
-        }
     }
 
 }
