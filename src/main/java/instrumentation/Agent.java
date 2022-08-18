@@ -52,7 +52,7 @@ public class Agent {
                     return null;
                 }
 
-                if (className.startsWith("instrumentation/")) { // files that should not be instrumented
+                if (className.startsWith("application/")) {
                     return classfileBuffer;
                 }
 
@@ -95,7 +95,9 @@ public class Agent {
                             addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/String",
                                     "valueOf", "(J)Ljava/lang/String;", false));
                             addedInsns.add(new MethodInsnNode(INVOKESTATIC, "application/QueueMapMediator",
-                                    "getByThreadId", "(Ljava/lang/String;)Ljava/util/Queue;", false));
+                                    "getByThreadId",
+                                    "(Ljava/lang/String;)Ljava/util/concurrent/ConcurrentLinkedQueue;",
+                                    false));
                             addedInsns.add(new TypeInsnNode(NEW, "application/ThreadMarker"));
                             addedInsns.add(new InsnNode(DUP));
                             addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/System",
@@ -106,8 +108,9 @@ public class Agent {
                             addedInsns.add(new LdcInsnNode(className));
                             addedInsns.add(new MethodInsnNode(INVOKESPECIAL, "application/ThreadMarker",
                                     "<init>", "(JILjava/lang/String;)V"));
-                            addedInsns.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Queue",
-                                    "add", "(Ljava/lang/Object;)Z", true));
+                            addedInsns.add(new MethodInsnNode(INVOKEVIRTUAL,
+                                    "java/util/concurrent/ConcurrentLinkedQueue",
+                                    "add", "(Ljava/lang/Object;)Z", false));
                             addedInsns.add(new InsnNode(POP));
 
                             numAdded = addedInsns.size();
@@ -118,7 +121,9 @@ public class Agent {
                             l1 = -1;
                             l2 = -1;
                         }
+
                     }
+
                 }
 
                 ClassWriter cw1 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
@@ -126,7 +131,9 @@ public class Agent {
                 return cw1.toByteArray();
 
             }
+
         }));
+
     }
 
 }

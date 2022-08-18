@@ -7,19 +7,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- *  A mediator between the user code and application
+ *  A mediator between the user code and application code
  */
 public class QueueMapMediator {
 
-    /**
-     * Each queue's head is the available name after which both the
-     * thread was named and the variable was named in the usercode.
-     */
-    private static final Map<String, Queue<ThreadMarker>> queueMap;
+    private static final ConcurrentHashMap<String, ConcurrentLinkedQueue<ThreadMarker>> queueMap;
 
     private static final int CAPACITY;
 
-    private static final ConcurrentStack<Queue<ThreadMarker>> queueStack;
+    private static final ConcurrentStack<ConcurrentLinkedQueue<ThreadMarker>> queueStack;
 
     static {
         CAPACITY = 16; // arbitrary limit - may be assigned any power of 2
@@ -35,8 +31,8 @@ public class QueueMapMediator {
     private QueueMapMediator() {
     }
 
-    private static Queue<ThreadMarker> newQueue(String id) {
-        Queue<ThreadMarker> q = new ConcurrentLinkedQueue<>();
+    private static ConcurrentLinkedQueue<ThreadMarker> newQueue(String id) {
+        ConcurrentLinkedQueue<ThreadMarker> q = queueStack.pop();
         queueMap.put(id, q);
         return q;
     }
@@ -48,11 +44,14 @@ public class QueueMapMediator {
      * @param id    Thread id stored as a key in queueMap
      * @return      value associated with key of value id
      */
-    public static Queue<ThreadMarker> getByThreadId(String id) {
-        Queue<ThreadMarker> q = queueMap.get(id);
+    public static ConcurrentLinkedQueue<ThreadMarker> getByThreadId(String id) {
+        ConcurrentLinkedQueue<ThreadMarker> q = queueMap.get(id);
         return q != null ? q : newQueue(id);
     }
 
+    /**
+     * @return
+     */
     public static String[][] output() {
         return queueMap.entrySet().stream()
                 .map(m -> m.getValue().stream().map(e -> new String[]{
