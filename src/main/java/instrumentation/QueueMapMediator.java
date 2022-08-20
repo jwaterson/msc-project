@@ -20,6 +20,8 @@ public class QueueMapMediator {
     static {
         CAPACITY = 16; // arbitrary limit - may be assigned any power of 2
         queueMap = new ConcurrentHashMap<>(CAPACITY << 4, 0.75f, CAPACITY << 4);
+        // pre-emptively counteracts lazy initialization of the map's internal bin table
+        queueMap.put("", new ConcurrentLinkedQueue<>());
         queueStack = new ConcurrentStack<>();
         for (int i = 0; i < CAPACITY; i++) {
             queueStack.push(new ConcurrentLinkedQueue<>());
@@ -32,9 +34,7 @@ public class QueueMapMediator {
     }
 
     private static ConcurrentLinkedQueue<ThreadMarker> newQueue(String id) {
-        ConcurrentLinkedQueue<ThreadMarker> q = queueStack.pop();
-        queueMap.put(id, q);
-        return q;
+        return queueMap.computeIfAbsent(id, k -> queueStack.pop());
     }
 
     /**
@@ -50,7 +50,7 @@ public class QueueMapMediator {
     }
 
     /**
-     * @return
+     * @return      array of String arrays containing ThreadMarker data and Thread id
      */
     public static String[][] output() {
         return queueMap.entrySet().stream()
