@@ -1,5 +1,7 @@
 package instrumentation;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ThreadMarker {
     final Object[] elements;
     public ThreadMarker(long time, int lineNum, String className) {
@@ -15,6 +17,7 @@ public class ThreadMarker {
                 String.valueOf(elements[0]),
                 String.valueOf(elements[1]),
                 String.valueOf(elements[2]),
-                String.valueOf(thread)};
+                String.valueOf(thread),
+                String.valueOf(thread.hashCode())};
     }
 }
