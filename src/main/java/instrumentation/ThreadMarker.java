@@ -1,6 +1,5 @@
 package instrumentation;
 
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ThreadMarker {
     final Object[] elements;
