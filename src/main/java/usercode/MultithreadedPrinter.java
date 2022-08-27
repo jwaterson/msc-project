@@ -1,8 +1,6 @@
 package usercode;
 
 
-import instrumentation.QueueMapMediator;
-
 public class MultithreadedPrinter {
     static char[] arr = "Hello World".toCharArray();
 
@@ -14,8 +12,5 @@ public class MultithreadedPrinter {
             }, String.valueOf(i));
             thread.start();
         }
-        QueueMapMediator.printOutput(); // for ease of testing
     }
-
-
 }

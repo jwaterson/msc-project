@@ -1,6 +1,6 @@
 package usercode;
 
-import instrumentation.QueueMapMediator;
+import instrumentation.StackMapMediator;
 
 public class MultithreadedPrinter3 {
 
@@ -10,7 +10,6 @@ public class MultithreadedPrinter3 {
             Thread th = new Thread(new PrintIt(), String.valueOf(i));
             th.start();
         }
-        QueueMapMediator.printOutput(); // for ease of testing
     }
 }
 

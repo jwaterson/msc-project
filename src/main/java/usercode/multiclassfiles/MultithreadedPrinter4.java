@@ -1,6 +1,6 @@
 package usercode.multiclassfiles;
 
-import instrumentation.QueueMapMediator;
+import instrumentation.StackMapMediator;
 
 public class MultithreadedPrinter4 {
 
@@ -10,6 +10,5 @@ public class MultithreadedPrinter4 {
             Thread th = new Thread(new PrintIt(), String.valueOf(i));
             th.start();
         }
-        QueueMapMediator.printOutput(); // for ease of testing
     }
 }

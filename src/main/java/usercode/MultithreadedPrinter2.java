@@ -1,6 +1,6 @@
 package usercode;
 
-import instrumentation.QueueMapMediator;
+import instrumentation.StackMapMediator;
 
 public class MultithreadedPrinter2 {
 
@@ -14,7 +14,6 @@ public class MultithreadedPrinter2 {
             }, String.valueOf(i));
             th.start();
         }
-        QueueMapMediator.printOutput(); // for ease of testing
     }
 
 }
