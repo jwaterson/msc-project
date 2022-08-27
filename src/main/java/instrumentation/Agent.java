@@ -21,7 +21,7 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 public class Agent {
 
     static final long START_TIME = System.nanoTime();
-    static final String BASE_APP_DIR = "java/instrumentation/";
+    static final String BASE_APP_DIR = "instrumentation/";
 
     public static void premain(String args, Instrumentation instrumentation) {
         if (args == null) {
@@ -119,7 +119,7 @@ public class Agent {
                                     "<init>", "(JILjava/lang/String;)V"));
                             addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
                                     "submitThreadMarker",
-                                    "(Ljava/lang/Thread;Lapplication/ThreadMarker;)V"));
+                                    "(Ljava/lang/Thread;L" + BASE_APP_DIR + "ThreadMarker;)V"));
 
                             if (shutdownToBeAdded) {
                                 addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
