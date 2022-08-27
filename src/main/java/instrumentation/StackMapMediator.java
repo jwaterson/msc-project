@@ -99,6 +99,8 @@ public class StackMapMediator {
     }
 
     /**
+     *
+     *
      * @return      array of String arrays containing ThreadMarker data and Thread id
      */
     public static String[][] output() {
@@ -120,7 +122,7 @@ public class StackMapMediator {
         return Long.compare(time1, time2);
     }
 
-    public static void printOutput() {
+    private static void printOutput() {
         System.out.println();
         System.out.println("Losing the Thread output:\n");
         for (String[] arr : output()) {
