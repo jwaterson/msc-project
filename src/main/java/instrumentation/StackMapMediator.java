@@ -123,8 +123,13 @@ public class StackMapMediator {
     }
 
     private static void printOutput() {
-        System.out.println();
-        System.out.println("Losing the Thread output:\n");
+        System.out.println("\n" +
+                "    __               _                __  __            ________                        __\n" +
+                "   / /   ____  _____(_)___  ____ _   / /_/ /_  ___     /_  __/ /_  ________  ____ _____/ /\n" +
+                "  / /   / __ \\/ ___/ / __ \\/ __ `/  / __/ __ \\/ _ \\     / / / __ \\/ ___/ _ \\/ __ `/ __  / \n" +
+                " / /___/ /_/ (__  ) / / / / /_/ /  / /_/ / / /  __/    / / / / / / /  /  __/ /_/ / /_/ /  \n" +
+                "/_____/\\____/____/_/_/ /_/\\__, /   \\__/_/ /_/\\___/    /_/ /_/ /_/_/   \\___/\\__,_/\\__,_/   \n" +
+                "                         /____/                                                           \n");
         for (String[] arr : output()) {
             System.out.println(Arrays.toString(arr));
         }
