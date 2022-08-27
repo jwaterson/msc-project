@@ -22,6 +22,6 @@ Birkbeck, University of London*
 
 ### 2. Run the agent.jar
 
-Type the following command into the Terminal (substituting in the sample paths for the paths from Content root):
+Type the following command into the Terminal (substituting the sample paths for the paths from Content root):
 
 `java -javaagent:path/to/agent.jar -jar path/to/your.jar`
