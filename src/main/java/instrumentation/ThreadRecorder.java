@@ -21,7 +21,7 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
  *
  * @author Josh Waterson
  */
-public class ThreadObserver implements ClassFileTransformer {
+public class ThreadRecorder implements ClassFileTransformer {
 
     static final String BASE_APP_DIR = "instrumentation/";
 
