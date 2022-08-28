@@ -5,23 +5,26 @@ Birkbeck, University of London*
 
 ## Instructions for use ##
 
-### 1. Make a jar file of your multithreaded application in IntelliJ ###
+### 1. Make a jar file containing your multithreaded application in IntelliJ ###
 
-(Basic reference: https://www.jetbrains.com/help/idea/compiling-applications.html#package_into_jar)
+(JetBrains reference: https://www.jetbrains.com/help/idea/compiling-applications.html#package_into_jar)
 
-1. Include module output:
-
-![img.png](src/main/resources/images/img.png)
-
-2. Add a MANIFEST.MF file:
-   1. Click on the new jar's name at the top of the list of jar contents
-   2. Navigate to the bottom of the pane where you should find 'manifest properties'
-   3. Specify the application's main class in the corresponding field as a period-separated path from Source root. _To get the correct format for the class name, navigate to the file in the Project pane, right-click on it, select 'Copy Path/Reference' and then select 'Copy Reference'._
+1. Open **File > Project Structure**
+2. Under **Project Settings**, navigate to **Artifacts**
+3. Click the '+' symbol at the top of the left pane
+4. Select **JAR > From modules with dependiencies...**
+5. In the 'Module' field, select the module containing the application on which you want to run _Losing the Thread_
+6. In the 'Main Class' field, select the class whose main method is run to start your application
+7. Press OK to exit the Create JAR from Modules window
+8. Press OK to exit the Project Structure window
+9. Finally, navigate to the **Build** tab on the main toolbar, select **Build Artifacts** and navigate to the JAR you just created. Press build
 
 
 
 ### 2. Run the agent.jar
 
-Type the following command into the Terminal (substituting in the sample paths for the paths from Content root):
+Type the following command into the Terminal (substituting the sample paths for the paths from Content root):
 
 `java -javaagent:path/to/agent.jar -jar path/to/your.jar`
+
+_(Note: to get the path to your JAR file, navigate to the file in your **Project Directory**, right click on it and select **Copy Path/Reference... > Path From Content Root**)_
