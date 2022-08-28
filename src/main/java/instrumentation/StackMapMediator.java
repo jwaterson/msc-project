@@ -1,6 +1,11 @@
 package instrumentation;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.*;
 
 /**
@@ -13,9 +18,11 @@ public class StackMapMediator {
     private static final int CAPACITY;
     private static final ConcurrentHashMap<Thread, ConcurrentThreadMarkerStack> threadMap;
     private static final ConcurrentStack<ConcurrentThreadMarkerStack> valStack;
+    private static final String CWD;
 
     static {
         CAPACITY = 16; // arbitrary limit - may be assigned any power of 2
+        CWD = System.getProperty("user.dir");
         threadMap = new ConcurrentHashMap<>(CAPACITY << 4, 0.75f,
                 CAPACITY << 4);
         // pre-emptively counteracts lazy initialization of the map's internal bin table
@@ -94,7 +101,7 @@ public class StackMapMediator {
             } catch (InterruptedException e) {
                 threadPool.shutdownNow();
             }
-            printOutput();
+            output();
         });
     }
 
@@ -103,12 +110,12 @@ public class StackMapMediator {
      *
      * @return      array of String arrays containing ThreadMarker data and Thread id
      */
-    public static String[][] output() {
+    private static ThreadReference[] mapStacksToArray() {
         return threadMap.entrySet().stream()
                 .map(m -> m.getValue().toThreadReferenceStringArray(m.getKey()))
                 .flatMap(Arrays::stream)
                 .sorted(StackMapMediator::compareThreadNanos)
-                .toArray(String[][]::new);
+                .toArray(ThreadReference[]::new);
     }
 
     /**
@@ -116,23 +123,38 @@ public class StackMapMediator {
      * @param other     A String array containing ThreadMarker information
      * @return          int result of comparison
      */
-    private static int compareThreadNanos(String[] curr, String[] other) {
-        long time1 = Long.parseLong(curr[0]);
-        long time2 = Long.parseLong(other[0]);
+    private static int compareThreadNanos(ThreadReference curr, ThreadReference other) {
+        long time1 = Long.parseLong(curr.elements[0]);
+        long time2 = Long.parseLong(other.elements[0]);
         return Long.compare(time1, time2);
     }
 
-    private static void printOutput() {
-        System.out.println("\n" +
-                "    __               _                __  __            ________                        __\n" +
-                "   / /   ____  _____(_)___  ____ _   / /_/ /_  ___     /_  __/ /_  ________  ____ _____/ /\n" +
-                "  / /   / __ \\/ ___/ / __ \\/ __ `/  / __/ __ \\/ _ \\     / / / __ \\/ ___/ _ \\/ __ `/ __  / \n" +
-                " / /___/ /_/ (__  ) / / / / /_/ /  / /_/ / / /  __/    / / / / / / /  /  __/ /_/ / /_/ /  \n" +
-                "/_____/\\____/____/_/_/ /_/\\__, /   \\__/_/ /_/\\___/    /_/ /_/ /_/_/   \\___/\\__,_/\\__,_/   \n" +
-                "                         /____/                                                           \n");
-        for (String[] arr : output()) {
-            System.out.println(Arrays.toString(arr));
+    private static void output() {
+        String dir = CWD + "/losingthethreadoutput/";
+        File f;
+        if (!((f = new File(dir)).exists())) {
+            f.mkdirs();
         }
+
+        try (FileWriter fw = new FileWriter(dir +
+                new SimpleDateFormat("yyy.MM.dd.HH.mm.ss").format(new Date()))) {
+            fw.write("""
+                        __               _                __  __            ________                        __
+                       / /   ____  _____(_)___  ____ _   / /_/ /_  ___     /_  __/ /_  ________  ____ _____/ /
+                      / /   / __ \\/ ___/ / __ \\/ __ `/  / __/ __ \\/ _ \\     / / / __ \\/ ___/ _ \\/ __ `/ __  /\s
+                     / /___/ /_/ (__  ) / / / / /_/ /  / /_/ / / /  __/    / / / / / / /  /  __/ /_/ / /_/ / \s
+                    /_____/\\____/____/_/_/ /_/\\__, /   \\__/_/ /_/\\___/    /_/ /_/ /_/_/   \\___/\\__,_/\\__,_/  \s
+                                             /____/                                                          \s
+                    """);
+            for (ThreadReference thref : mapStacksToArray()) {
+                fw.write(thref.toString() + "\n");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
 
 }
