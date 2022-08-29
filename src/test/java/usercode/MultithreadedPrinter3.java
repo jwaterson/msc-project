@@ -1,7 +1,5 @@
 package usercode;
 
-import instrumentation.StackMapMediator;
-
 public class MultithreadedPrinter3 {
 
     public static void main(String[] args) {

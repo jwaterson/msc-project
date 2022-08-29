@@ -1,7 +1,5 @@
 package usercode.multiclassfiles;
 
-import instrumentation.StackMapMediator;
-
 public class MultithreadedPrinter4 {
 
     public static void main(String[] args) {
