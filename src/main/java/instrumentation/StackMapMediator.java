@@ -137,7 +137,7 @@ public class StackMapMediator {
         }
 
         try (FileWriter fw = new FileWriter(dir +
-                new SimpleDateFormat("yyy.MM.dd.HH.mm.ss").format(new Date()))) {
+                new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date()) + ".txt")) {
             fw.write("""
                         __               _                __  __            ________                        __
                        / /   ____  _____(_)___  ____ _   / /_/ /_  ___     /_  __/ /_  ________  ____ _____/ /
