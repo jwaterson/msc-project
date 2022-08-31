@@ -6,7 +6,6 @@ import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.jar.Attributes;
@@ -30,7 +29,7 @@ public class ThreadRecorder implements ClassFileTransformer {
                             String className,
                             Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain,
-                            byte[] classfileBuffer) throws IllegalClassFormatException {
+                            byte[] classfileBuffer) {
 
         if (loader == null) { // bootstrap loader caught by this check - will not load user's code
             return null;
@@ -61,22 +60,18 @@ public class ThreadRecorder implements ClassFileTransformer {
         ClassNode cn = new ClassNode(ASM9);
         ClassReader cr = new ClassReader(classfileBuffer);
         cr.accept(cn, 0);
-        boolean shutdownToBeAdded = false;
 
+        InsnList insns;
+        InsnList addedInsns;
         for (MethodNode mn : cn.methods) {
-
-            if (mn.name.equals("main") && mainClass.equals(className)) {
-                shutdownToBeAdded = true;
-            }
-
-            InsnList insns = mn.instructions;
+            insns = mn.instructions;
 
             if (insns.size() == 0) {
                 continue;
             }
 
-            int lineNum = -1, l1 = -1, l2 = -1;
             AbstractInsnNode node;
+            int lineNum = -1, l1 = -1, l2 = -1;
             int numAdded;
             for (int i = 0; i < insns.size(); i++) {
                 node = insns.get(i);
@@ -93,8 +88,7 @@ public class ThreadRecorder implements ClassFileTransformer {
                 }
 
                 if (lineNum > -1 && l1 < l2) {
-                    InsnList addedInsns = new InsnList();
-
+                    addedInsns = new InsnList();
                     addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Thread",
                             "currentThread", "()Ljava/lang/Thread;", false));
                     addedInsns.add(new TypeInsnNode(NEW, BASE_APP_DIR + "ThreadMarker"));
@@ -111,24 +105,33 @@ public class ThreadRecorder implements ClassFileTransformer {
                             "submitThreadMarker",
                             "(Ljava/lang/Thread;L" + BASE_APP_DIR + "ThreadMarker;)V"));
 
-                    if (shutdownToBeAdded) {
-                        addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
-                                "shutdownThreadPool", "()V"));
-                        shutdownToBeAdded = false;
-                    }
-
                     numAdded = addedInsns.size();
                     insns.insert(insns.get(l1), addedInsns);
                     lineNum = -1;
-
                     i += numAdded - 1; // -1 to counteract i incrementing with next iteration
                     l1 = -1;
                     l2 = -1;
-
                 }
-
             }
 
+            // tie up all loose (thread) ends
+            if (mn.name.equals("main") && mainClass.equals(className)) {
+                boolean returnEncountered = false;
+                for (int i = insns.size(); --i > -1;) {
+                    node = insns.get(i);
+                    if (node instanceof InsnNode && node.getOpcode() == RETURN) {
+                        returnEncountered = true;
+                    }
+                    if ((node instanceof LabelNode || node instanceof FrameNode)
+                            && returnEncountered) {
+                        addedInsns = new InsnList();
+                        addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
+                                "joinUserThreads", "()V"));
+                        insns.insert(insns.get(i), addedInsns);
+                        break;
+                    }
+                }
+            }
         }
 
         ClassWriter cw1 = new ClassWriter(ClassWriter.COMPUTE_MAXS);

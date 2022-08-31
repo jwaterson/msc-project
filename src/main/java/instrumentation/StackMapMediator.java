@@ -54,55 +54,22 @@ public class StackMapMediator {
         return threadMap.computeIfAbsent(th, k -> valStack.pop());
     }
 
-    /**
-     * Used by java agent to get map entry pertaining to
-     * currently executing thread.
-     *
-     * @param th   Thread stored as a key in queueMap
-     * @return      value associated with key of value id
-     */
-    private static ConcurrentThreadMarkerStack getByThreadId(Thread th) {
-        ConcurrentThreadMarkerStack q = threadMap.get(th);
-        return q != null ? q : newVal(th);
-    }
-
     public static void submitThreadMarker(Thread caller, ThreadMarker tm) {
-        try {
-            threadPool.execute(() -> getByThreadId(caller).push(tm));
-        } catch (Exception ex) {
-            if (threadPool.getActiveCount() > 0) {
-                System.err.println("Something went wrong during submission!");
-            }
-            threadPool.shutdown();
-        }
+        ConcurrentThreadMarkerStack stack = threadMap.get(caller);
+        (stack != null ? stack : newVal(caller)).push(tm);
     }
 
-    public static void shutdownThreadPool() {
-        if (shutDownInitiated) {
-            return;
-        }
-        shutDownInitiated = true;
-        threadPool.execute(() -> {
-            // if no user thread is alive the program has completed
-            while (threadMap.keySet().stream().anyMatch(Thread::isAlive)) {
+    public static void joinUserThreads() {
+        for (Thread th : threadMap.keySet()) {
+            if (!(th.equals(Thread.currentThread()))) {
                 try {
-                    // check again after sleeping
-                    Thread.sleep(10_000);
+                    th.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            threadPool.shutdown();
-            try {
-                // give remaining workers 1 sec to complete adding last ThreadMarkers
-                if (!threadPool.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
-                    threadPool.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                threadPool.shutdownNow();
-            }
-            output();
-        });
+        }
+        output();
     }
 
     /**
@@ -153,8 +120,6 @@ public class StackMapMediator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 
 }
