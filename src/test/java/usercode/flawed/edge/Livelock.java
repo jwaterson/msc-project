@@ -1,4 +1,4 @@
-package usercode.edge;
+package usercode.flawed.edge;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;

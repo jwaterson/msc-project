@@ -1,4 +1,4 @@
-package usercode.edge;
+package usercode.flawed.edge;
 
 public class Empty {
 

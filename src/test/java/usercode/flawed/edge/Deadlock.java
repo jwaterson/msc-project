@@ -1,4 +1,4 @@
-package usercode.edge;
+package usercode.flawed.edge;
 
 import java.util.ArrayList;
 import java.util.List;
