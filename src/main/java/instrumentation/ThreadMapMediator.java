@@ -14,7 +14,7 @@ import java.util.concurrent.*;
  * @author Josh Waterson
  */
 public class ThreadMapMediator {
-    private static final int CAPACITY;
+    static final int CAPACITY;
     private static final ConcurrentHashMap<Thread, ConcurrentThreadMarkerStack> threadMap;
     private static final ConcurrentStack<ConcurrentThreadMarkerStack> valStack;
     private static final String CWD;
@@ -22,7 +22,7 @@ public class ThreadMapMediator {
     static {
         CAPACITY = 1024; // arbitrary limit
         CWD = System.getProperty("user.dir");
-        threadMap = new ConcurrentHashMap<>(CAPACITY, .5f);
+        threadMap = new ConcurrentHashMap<>(CAPACITY);
         valStack = new ConcurrentStack<>();
         for (int i = 0; i < CAPACITY; i++) {
             valStack.push(new ConcurrentThreadMarkerStack());
@@ -48,7 +48,7 @@ public class ThreadMapMediator {
         try {
             return threadMap.computeIfAbsent(th, k -> valStack.pop());
         } catch (NullPointerException e) {
-            throw new RuntimeException("Thread count exceeded 1000 (limit).");
+            throw new RuntimeException("Thread count exceeded limit of " + CAPACITY);
         }
     }
 
@@ -61,6 +61,7 @@ public class ThreadMapMediator {
     public static void submitThreadMarker(Thread caller, ThreadMarker tm) {
         ConcurrentThreadMarkerStack stack = threadMap.get(caller);
         (stack != null ? stack : newVal(caller)).push(tm);
+
     }
 
     /**
@@ -68,10 +69,11 @@ public class ThreadMapMediator {
      * join on each key Thread.
      */
     public static void terminate() {
+        Thread main = Thread.currentThread();
         boolean unjoined = threadMap.keySet().stream()
-                .anyMatch(Thread::isAlive);
+                .anyMatch(th -> th.isAlive() && !(th.equals(main)));
         for (Thread th : threadMap.keySet()) {
-            if (!(th.equals(Thread.currentThread()))) {
+            if (!(th.equals(main))) {
                 try {
                     th.join();
                 } catch (InterruptedException e) {
@@ -91,7 +93,7 @@ public class ThreadMapMediator {
          */
         private static ThreadReference[] threadMapEntriesToArray() {
             return threadMap.entrySet().stream()
-                    .map(m -> m.getValue().toThreadReferenceStringArray(m.getKey()))
+                    .map(m -> m.getValue().toThreadReferenceArray(m.getKey()))
                     .flatMap(Arrays::stream)
                     .sorted(ThreadMapOutputWriter::compareThreadNanos)
                     .toArray(ThreadReference[]::new);
@@ -130,6 +132,7 @@ public class ThreadMapMediator {
                      / /___/ /_/ (__  ) / / / / /_/ /  / /_/ / / /  __/    / / / / / / /  /  __/ /_/ / /_/ / \s
                     /_____/\\____/____/_/_/ /_/\\__, /   \\__/_/ /_/\\___/    /_/ /_/ /_/_/   \\___/\\__,_/\\__,_/  \s
                                              /____/                                                          \s
+                    
                     """);
 
                 if (unjoined) {
