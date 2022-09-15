@@ -1,4 +1,4 @@
-package instrumentation;
+package instrumentation.agent;
 
 import java.lang.instrument.Instrumentation;
 
