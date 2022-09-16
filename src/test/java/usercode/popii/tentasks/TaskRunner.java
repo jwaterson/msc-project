@@ -1,14 +1,15 @@
 package usercode.popii.tentasks;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class TaskRunner {
 
     public static void main(String[] args) {
 
-        Timer timer = new Timer(1,-1);
+        Timer timer;
         Thread[] threads = new Thread[10];
-        Thread thread = null;
+        Thread thread;
         long length;
         Scanner in = new Scanner( System.in );
 
@@ -33,18 +34,19 @@ public class TaskRunner {
             threads[i] = thread;
         }
 
-        boolean finished = true;
-        while (true) {
+        boolean finished = false;
+        do {
             finished = true;
-            for( int i = 0; i < 10; i++ ) {
-                if (threads[i].isAlive()){
+            for (int i = 0; i < 10; i++) {
+                if (threads[i].isAlive()) {
                     finished = false;
+                    break;
                 }
             }
-            if (finished) break;
-        }
-        if (finished) System.out.println("Finished tasks: " + Timer.finished_tasks);
+        } while (!finished);
+        System.out.println("Finished tasks: " + Timer.finished_tasks);
 
         in.close();
+
     }
 }
