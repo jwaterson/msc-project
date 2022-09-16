@@ -1,4 +1,4 @@
-package instrumentation;
+package instrumentation.agent;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -11,12 +11,14 @@ import java.security.ProtectionDomain;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import static instrumentation.Agent.START_TIME;
+import static instrumentation.agent.Agent.START_TIME;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 /**
- * Custom ClassFileTransformer
+ * A ClassFileTransformer implementation whose transform
+ * method inserts additional bytecode into user classes that
+ * records threads' progress.
  *
  * @author Josh Waterson
  */
@@ -62,7 +64,7 @@ public class ThreadRecorder implements ClassFileTransformer {
         cr.accept(cn, 0);
 
         InsnList insns;
-        InsnList addedInsns;
+        InsnList addedInsns = new InsnList();
         for (MethodNode mn : cn.methods) {
             insns = mn.instructions;
 
@@ -76,7 +78,9 @@ public class ThreadRecorder implements ClassFileTransformer {
             for (int i = 0; i < insns.size(); i++) {
                 node = insns.get(i);
                 if (node instanceof LineNumberNode) {
-                    lineNum = ((LineNumberNode) node).line;
+                    if ((lineNum = ((LineNumberNode) node).line) <= Short.MAX_VALUE) {
+                        throw new RuntimeException("Line number too large!");
+                    }
                 } else if (node instanceof LabelNode) {
                     if (l1 == -1) {
                         l1 = i;
@@ -88,7 +92,7 @@ public class ThreadRecorder implements ClassFileTransformer {
                 }
 
                 if (lineNum > -1 && l1 < l2) {
-                    addedInsns = new InsnList();
+
                     addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Thread",
                             "currentThread", "()Ljava/lang/Thread;", false));
                     addedInsns.add(new TypeInsnNode(NEW, BASE_APP_DIR + "ThreadMarker"));
@@ -97,11 +101,11 @@ public class ThreadRecorder implements ClassFileTransformer {
                             "nanoTime", "()J", false));
                     addedInsns.add(new LdcInsnNode(START_TIME));
                     addedInsns.add(new InsnNode(LSUB));
-                    addedInsns.add(new IntInsnNode(BIPUSH, lineNum));
+                    addedInsns.add(new IntInsnNode(SIPUSH, lineNum));
                     addedInsns.add(new LdcInsnNode(className));
                     addedInsns.add(new MethodInsnNode(INVOKESPECIAL, BASE_APP_DIR + "ThreadMarker",
                             "<init>", "(JILjava/lang/String;)V"));
-                    addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
+                    addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "ThreadMapMediator",
                             "submitThreadMarker",
                             "(Ljava/lang/Thread;L" + BASE_APP_DIR + "ThreadMarker;)V"));
 
@@ -124,9 +128,8 @@ public class ThreadRecorder implements ClassFileTransformer {
                     }
                     if ((node instanceof LabelNode || node instanceof FrameNode)
                             && returnEncountered) {
-                        addedInsns = new InsnList();
-                        addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "StackMapMediator",
-                                "joinUserThreads", "()V"));
+                        addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "ThreadMapMediator",
+                                "terminate", "()V"));
                         insns.insert(insns.get(i), addedInsns);
                         break;
                     }
