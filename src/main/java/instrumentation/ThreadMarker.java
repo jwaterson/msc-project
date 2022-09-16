@@ -1,9 +1,6 @@
 package instrumentation;
 
 
-import java.util.Arrays;
-import java.util.Objects;
-
 public class ThreadMarker {
     private final Object[] elements;
 
