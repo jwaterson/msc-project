@@ -1,4 +1,4 @@
-package instrumentation.agent;
+package losingthethreadagentfiles_.agent;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -11,7 +11,7 @@ import java.security.ProtectionDomain;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import static instrumentation.agent.Agent.START_TIME;
+import static losingthethreadagentfiles_.agent.Agent.START_TIME;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
@@ -24,7 +24,7 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
  */
 public class ThreadRecorder implements ClassFileTransformer {
 
-    static final String BASE_APP_DIR = "instrumentation/";
+    static final String BASE_APP_DIR = "losingthethreadagentfiles_/";
 
     @Override
     public byte[] transform(ClassLoader loader,
@@ -78,9 +78,7 @@ public class ThreadRecorder implements ClassFileTransformer {
             for (int i = 0; i < insns.size(); i++) {
                 node = insns.get(i);
                 if (node instanceof LineNumberNode) {
-                    if ((lineNum = ((LineNumberNode) node).line) <= Short.MAX_VALUE) {
-                        throw new RuntimeException("Line number too large!");
-                    }
+                    lineNum = ((LineNumberNode) node).line;
                 } else if (node instanceof LabelNode) {
                     if (l1 == -1) {
                         l1 = i;

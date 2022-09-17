@@ -1,7 +1,7 @@
 package usercode;
 
-import instrumentation.ThreadMapMediator;
-import instrumentation.ThreadMarker;
+import losingthethreadagentfiles_.ThreadMapMediator;
+import losingthethreadagentfiles_.ThreadMarker;
 
 import java.util.*;
 import java.util.function.Function;
