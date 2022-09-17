@@ -1,11 +1,9 @@
 package usercode.flawed;
 
-import instrumentation.StackMapMediator;
-import instrumentation.ThreadMarker;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.StringJoiner;
 
 /**
  *
@@ -29,6 +27,14 @@ public class ListAdderRunner {
         synchronized (Thread.currentThread()) { // incorrect synchronization
             list.add(list.size());
         }
+    }
+
+    private static int treat(int listSize) {
+        StringJoiner sj = new StringJoiner(", ");
+        for (int i = 0; i < listSize; i++) {
+            sj.add(String.valueOf(i).repeat(i << 2));
+        }
+        return sj.toString().split(", ").length;
     }
 
     public static void main(String[] args) {
