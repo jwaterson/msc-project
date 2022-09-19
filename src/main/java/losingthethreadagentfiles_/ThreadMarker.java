@@ -1,6 +1,12 @@
 package losingthethreadagentfiles_;
 
 
+/**
+ * A simple class that stores thread data whose concatWithThread
+ * method, outputs ThreadReferences
+ *
+ * @author Josh Waterson
+ */
 public class ThreadMarker {
     private final Object[] elements;
 

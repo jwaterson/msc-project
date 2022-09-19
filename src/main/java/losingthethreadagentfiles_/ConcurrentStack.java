@@ -4,6 +4,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
+ * A stack structure authored by Brian Goetz and Tim Peierls
+ * which uses CAS to enable thread-safe concurrent access
+ *
  * @param <E>   type contained in Stack
  * @author      Brian Goetz and Tim Peierls
  */

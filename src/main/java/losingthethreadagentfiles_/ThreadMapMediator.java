@@ -1,7 +1,5 @@
 package losingthethreadagentfiles_;
 
-import exceptions.TooManyThreadsException;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,7 +9,8 @@ import java.util.Date;
 import java.util.concurrent.*;
 
 /**
- *  A mediator between the user code and application code
+ *  A utility class that mediates between instrumented user code
+ *  and Losing the Thread's application code.
  *
  * @author Josh Waterson
  */

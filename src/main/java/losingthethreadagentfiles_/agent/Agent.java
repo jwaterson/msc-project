@@ -4,7 +4,8 @@ import java.lang.instrument.Instrumentation;
 
 
 /**
- * Agent class
+ * Java agent used to intercept classloading in order to transform classes
+ * with the ThreadRecorder class.
  *
  * @author Josh Waterson
  */
