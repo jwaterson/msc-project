@@ -1,5 +1,7 @@
 package losingthethreadagentfiles_;
 
+import exceptions.TooManyThreadsException;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.concurrent.*;
  */
 public class ThreadMapMediator {
     static final int CAPACITY;
+    private static final int MAX_CLASSNAME_LENGTH = Short.MAX_VALUE * 2 + 1;
     private static final ConcurrentHashMap<Thread, ConcurrentThreadMarkerStack> threadMap;
     private static final ConcurrentStack<ConcurrentThreadMarkerStack> valStack;
     private static final String CWD;
@@ -48,7 +51,8 @@ public class ThreadMapMediator {
         try {
             return threadMap.computeIfAbsent(th, k -> valStack.pop());
         } catch (NullPointerException e) {
-            throw new RuntimeException("Thread count exceeded limit of " + CAPACITY);
+            throw new NullPointerException("Too many threads! Capacity is "
+                    + CAPACITY);
         }
     }
 
@@ -59,16 +63,20 @@ public class ThreadMapMediator {
      * @param tm        The new ThreadMarker object to be added
      */
     public static void submitThreadMarker(Thread caller, ThreadMarker tm) {
+        if (((int) tm.getElements()[1]) > Short.MAX_VALUE) {
+            throw new UnsupportedOperationException("Line number too large");
+        } else if (((String) tm.getElements()[2]).length() > MAX_CLASSNAME_LENGTH) {
+            throw new IllegalArgumentException("Class name too long");
+        }
         ConcurrentThreadMarkerStack stack = threadMap.get(caller);
         (stack != null ? stack : newVal(caller)).push(tm);
-
     }
 
     /**
      * Iterates through threadMap's keySet, calling
      * join on each key Thread.
      */
-    public static void terminate() {
+    public static void output() {
         Thread main = Thread.currentThread();
         boolean unjoined = threadMap.keySet().stream()
                 .anyMatch(th -> th.isAlive() && !(th.equals(main)));
@@ -81,7 +89,7 @@ public class ThreadMapMediator {
                 }
             }
         }
-        ThreadMapOutputWriter.output(unjoined);
+        ThreadMapOutputWriter.generateOutput(unjoined);
     }
 
     static class ThreadMapOutputWriter {
@@ -116,7 +124,7 @@ public class ThreadMapMediator {
          *
          * @param unjoined  indicates whether any live threads were detected
          */
-        private static void output(boolean unjoined) {
+        private static void generateOutput(boolean unjoined) {
             String dir = CWD + "/losingthethreadoutput/";
             File f;
             if (!((f = new File(dir)).exists())) {
