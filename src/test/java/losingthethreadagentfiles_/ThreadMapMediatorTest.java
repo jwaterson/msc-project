@@ -73,7 +73,7 @@ class ThreadMapMediatorTest {
     @Test
     void submitThreadMarkerLineNumberTooLargeException() {
         assertThrows(UnsupportedOperationException.class,
-                //
+                // Line number too large
                 () -> ThreadMapMediator.submitThreadMarker(new Thread(),
                         new ThreadMarker(System.nanoTime(), Short.MAX_VALUE + 1,
                                 "Whatever$Subclass")));
@@ -82,7 +82,7 @@ class ThreadMapMediatorTest {
     @Test
     void submitThreadMarkerClassNameTooLongException() {
         assertThrows(IllegalArgumentException.class,
-                //
+                // Class name too large
                 () -> ThreadMapMediator.submitThreadMarker(new Thread(),
                         new ThreadMarker(System.nanoTime(), Short.MAX_VALUE,
                                 "_".repeat(Short.MAX_VALUE * 2 + 2))));
@@ -95,7 +95,8 @@ class ThreadMapMediatorTest {
                     new ThreadMarker((long) i << 2, i,
                             "Whatever$Subclass"));
         }
-        assertEquals(1024, map.mappingCount());
+        // max number of allowable threads
+        assertEquals(CAPACITY, map.mappingCount());
     }
 
     @Test
@@ -116,6 +117,7 @@ class ThreadMapMediatorTest {
         while (map.keySet().stream().anyMatch(Thread::isAlive)) {
         }
 
+        // max number of allowable threads with uneven stacks
         assertEquals(CAPACITY, map.mappingCount());
     }
 
