@@ -88,7 +88,6 @@ public class ThreadRecorder implements ClassFileTransformer {
                 } else if (node instanceof FrameNode) {
                     l1 = i;
                 }
-
                 if (lineNum > -1 && l1 < l2) {
 
                     addedInsns.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Thread",
@@ -127,7 +126,7 @@ public class ThreadRecorder implements ClassFileTransformer {
                     if ((node instanceof LabelNode || node instanceof FrameNode)
                             && returnEncountered) {
                         addedInsns.add(new MethodInsnNode(INVOKESTATIC, BASE_APP_DIR + "ThreadMapMediator",
-                                "terminate", "()V"));
+                                "output", "()V"));
                         insns.insert(insns.get(i), addedInsns);
                         break;
                     }
