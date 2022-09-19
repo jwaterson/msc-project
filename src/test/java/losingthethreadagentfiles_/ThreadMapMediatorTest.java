@@ -1,13 +1,10 @@
 package losingthethreadagentfiles_;
 
-import com.jetbrains.qodana.sarif.model.Run;
-import exceptions.TooManyThreadsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
